@@ -15,7 +15,7 @@ DAYS[26] = {
   ],
   learn: [
     { t: "h", text: "Why create elements with JavaScript?" },
-    { t: "p", html: "<p>Think about a to-do list app. When you write the HTML, you do not know how many tasks the user will add tomorrow: maybe two, maybe twenty. The same is true for chat messages, search results or the songs in a playlist. The HTML cannot list them in advance, so JavaScript must <b>make new elements</b> while the page is open.</p>" },
+    { t: "p", html: "<p>When you write a to-do app, you do not know how many tasks the user will add tomorrow: two, or twenty. Chat messages and search results are the same. The HTML cannot list them in advance, so JavaScript must <b>make new elements</b> while the page is open.</p>" },
     { t: "analogy", title: "createElement is like a LEGO brick in your hand", html: "<p><code>document.createElement(\"li\")</code> gives you a new brick, but it is still in your hand — nobody can see it. You can paint it (<code>textContent</code>, <code>className</code>) while you hold it. Only when you <b>snap it onto the model</b> with <code>append</code> does it appear on the page.</p>" },
     { t: "web", title: "create.html", code: c`<!DOCTYPE html>
 <html>
@@ -42,7 +42,7 @@ DAYS[26] = {
     ] },
     { t: "check", q: "A script runs `const p = document.createElement(\"p\"); p.textContent = \"Hi\";` and nothing else. What do you see on the page?", o: ["A new paragraph `Hi` at the bottom", "Nothing new: the paragraph was never appended", "An error message"], a: 1, e: "`createElement` only makes the element. It appears on the page only after you `append` (or `prepend`) it somewhere.", hint: "Remember the LEGO brick: is it on the model yet?" },
     { t: "h", text: "append, prepend and remove" },
-    { t: "p", html: "<p>New messages in a chat go to the <b>bottom</b>, but a news site shows the newest story at the <b>top</b>. And when you finish a task you want it <b>gone</b>. Three small methods do these jobs. Each new element below also gets a <code>className</code>, which is the same as writing <code>class=\"...\"</code> in the HTML.</p>" },
+    { t: "p", html: "<p>New chat messages go to the <b>bottom</b>, but a news site shows the newest story at the <b>top</b>, and a finished task should be <b>gone</b>. Three small methods do these jobs. Below, each new element also gets a <code>className</code> — the same as <code>class=\"...\"</code> in HTML.</p>" },
     { t: "web", title: "add-remove.html", code: c`<!DOCTYPE html>
 <html>
 <body>
@@ -77,7 +77,7 @@ DAYS[26] = {
     });
   </script>
 </body>
-</html>`, before: "<p>Click the three buttons in different orders and watch the canteen queue change.</p>", note: "<p><code>makeItem()</code> is a normal function from Week 3 that <b>returns</b> a new element. The <code>if (first)</code> protects us: when the list is empty, <code>querySelector</code> returns <code>null</code>, and <code>null.remove()</code> would crash.</p>", height: 240 },
+</html>`, before: "<p>Click the three buttons in different orders and watch the canteen queue change.</p>", note: "<p><code>makeItem()</code> is a normal function that <b>returns</b> a new element. The <code>if (first)</code> protects us: when the list is empty, <code>querySelector</code> returns <code>null</code>, and <code>null.remove()</code> would crash.</p>", height: 240 },
     { t: "table", head: ["Code", "What it does"], rows: [
       ["`document.createElement(\"li\")`", "makes a new element (not on the page yet)"],
       ["`el.textContent = \"...\"`", "sets its text"],
@@ -107,7 +107,7 @@ DAYS[26] = {
     }
   </script>
 </body>
-</html>`, height: 200, note: "<p>Add a fifth song <b>to the array</b> and run again: the page grows by itself. You change the data, and the loop builds the page. <code>songs.forEach(song => { ... })</code> works exactly the same way.</p>" },
+</html>`, height: 200, note: "<p>Add a fifth song <b>to the array</b> and run again: the page grows by itself. <code>songs.forEach(song => { ... })</code> works exactly the same way.</p>" },
     { t: "check", q: "The array has 6 items and the loop body creates and appends one `<li>`. How many `<li>` are created?", o: ["1", "6", "7"], a: 1, e: "The loop body runs once for every item, so 6 times: one `<li>` per item." },
     { t: "steps", web: true, title: "A mini to-do list", problem: "<p>Build a to-do list: type a task, click <b>Add</b> and it appears in the list. Clicking a task crosses it out (and clicking again brings it back). Each task has a <b>✕</b> button that deletes it, and <b>Clear all</b> empties the list. Empty tasks must be ignored.</p>",
       steps: [
@@ -190,8 +190,8 @@ li.append(" ", del);` },
 </body>
 </html>`, height: 260 },
     { t: "h", text: "Waiting: setTimeout" },
-    { t: "p", html: "<p>Many apps do something <b>later</b>: \"Saved!\" disappears after two seconds, a game shows \"Ready… Go!\", a quiz hides the answer after a moment. <code>setTimeout(function, ms)</code> runs a function once, after a number of <b>milliseconds</b> (1000 ms = 1 second).</p>" },
-    { t: "analogy", title: "setTimeout is like an oven timer", html: "<p>You set the timer for 20 minutes and then you go and do other things — you do not stand in front of the oven. When the time is up, the timer rings and you take the food out. JavaScript is the same: it sets the timer, <b>continues with the next lines</b>, and runs your function when the time is up.</p>" },
+    { t: "p", html: "<p>Many apps do something <b>later</b>: \"Saved!\" disappears after two seconds, a game shows \"Ready… Go!\". <code>setTimeout(function, ms)</code> runs a function once, after a number of <b>milliseconds</b> (1000 ms = 1 second).</p>" },
+    { t: "analogy", title: "setTimeout is like an oven timer", html: "<p>You set it for 20 minutes and go and do other things. When the time is up, the timer rings and you take the food out. JavaScript is the same: it sets the timer, <b>continues with the next lines</b>, and runs your function when the time is up.</p>" },
     { t: "code", code: c`console.log("Start");
 setTimeout(() => {
   console.log("Two seconds later");
@@ -289,7 +289,7 @@ console.log(text);
 console.log(typeof text);
 
 const back = JSON.parse(text);
-console.log(back.length, back[1]);`, note: "<p>In a page you would write <code>localStorage.setItem(\"tasks\", JSON.stringify(tasks))</code> to save and <code>JSON.parse(localStorage.getItem(\"tasks\"))</code> to load.</p>" },
+console.log(back.length, back[1]);`, note: "<p>In a page you would save with <code>localStorage.setItem(\"tasks\", text)</code>, and later load the text with <code>localStorage.getItem(\"tasks\")</code> and turn it back into an array with <code>JSON.parse</code>.</p>" },
     { t: "check", q: "What does the last line show?", code: c`const marks = [90, 85];
 const saved = JSON.stringify(marks);
 console.log(JSON.parse(saved)[0] + 10);`, o: ["`100`", "`9010`", "`[90, 85]10`"], a: 0, e: "`JSON.parse` gives back a real array of numbers, so `[0]` is the number 90 and 90 + 10 = 100." },
