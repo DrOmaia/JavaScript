@@ -35,7 +35,7 @@ typeof undefined;
 typeof null;      // "object"
 
 let a;        // undefined
-let b = null; // empty on purpose`],
+let b = null; // empty`],
       ["Operators", c`7 + 2;    // 9
 7 - 2;    // 5
 7 * 2;    // 14
@@ -75,7 +75,7 @@ w.replace("R", "J");
 const age = Number(
   prompt("Age?"));
 console.log(¦Hi #{name}!¦);
-console.log(¦Next: #{age + 1}¦);
+console.log(¦Next: #{age+1}¦);
 
 "5" + 1;          // "51"
 Number("5") + 1;  // 6
@@ -174,8 +174,8 @@ for (let i = 1; i <= 5; i++) {
 // continue = skip this run
 // break = stop the loop`],
       ["Nested loops", c`for (let r = 1; r <= 2; r++) {
-  for (let c = 1; c <= 3; c++) {
-    console.log(r, c);
+  for (let k = 1; k < 4; k++) {
+    console.log(r, k);
   }
 }
 // 1 1   1 2   1 3
@@ -251,9 +251,12 @@ m.map((x) => x + 5);
 m.filter((x) => x > 80);
 // [95, 82]
 m.find((x) => x > 80);    // 95
-m.findIndex((x) => x > 80); // 1
-m.some((x) => x < 60); // false
-m.every((x) => x >= 70); // true
+m.findIndex((x) => x > 80);
+// 1
+m.some((x) => x < 60);
+// false
+m.every((x) => x > 60);
+// true
 m.reduce((s, x) => s + x, 0);
 // 247
 m.forEach((x) => {
