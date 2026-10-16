@@ -17,7 +17,8 @@
     let line = 0, loops = 0, out = "";
     const input = STDIN ? String(STDIN).split("\n") : []; let inPos = 0;
     window.__L = l => { line = l; };
-    window.__g = () => { if (++loops > 5000000) { loops = 0; throw new Error("JS30_LOOP"); } };
+    // the loop budget is per task: it starts again after every event / timer
+    window.__g = () => { if (loops++ === 0) setTimeout(() => { loops = 0; }, 0); if (loops > 5000000) { loops = 0; throw new Error("JS30_LOOP"); } };
     const join = a => Array.prototype.map.call(a, x => F.format(x, true)).join(" ");
     const log = kind => function () { const t = join(arguments); out += t + "\n"; send({ type: "console", kind, text: t }); };
     console.log = log("out"); console.info = log("out"); console.warn = log("warn"); console.error = log("err");
@@ -70,7 +71,8 @@
   function prepare(src, mode, token, stdin) {
     let firstError = null;
     const html = src.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi, (all, attrs, code, offset) => {
-      if (/\bsrc\s*=/.test(attrs) || /type\s*=\s*["']?(module|application\/json|text\/template)/i.test(attrs)) return all;
+      const type = (/\btype\s*=\s*["']?([^"'\s>]+)/i.exec(attrs) || [])[1];
+      if (/\bsrc\s*=/.test(attrs) || (type && !/^(text\/javascript|application\/javascript|module)$/i.test(type))) return all;
       const before = src.slice(0, offset + all.indexOf(">") + 1);
       const lineOffset = before.split("\n").length - 1;
       try {
@@ -84,7 +86,7 @@
     const rt = `<script>(${pageRuntime.toString()})(${JSON.stringify(token)}, ${JSEngine.formatLib.toString()}, ${JSON.stringify(mode)}, ${JSON.stringify(stdin || "")});</script>`;
     const style = `<style>html{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}</style>`;
     // the runtime must run before the student's scripts
-    const m = /<head[^>]*>/i.exec(html);
+    const m = /<head\b[^>]*>/i.exec(html) || /<!doctype[^>]*>/i.exec(html);
     const out = m ? html.slice(0, m.index + m[0].length) + rt + style + html.slice(m.index + m[0].length) : rt + style + html;
     return { html: out, error: firstError };
   }
@@ -95,6 +97,11 @@
   window.addEventListener("message", ev => { const m = ev.data; if (m && m.token && listeners.has(m.token)) listeners.get(m.token)(m, ev); });
 
   function srcLine(src, line) { return line ? (src.split("\n")[line - 1] || "") : ""; }
+  // messages come from the student's page: keep only plain, safe values
+  function cleanInfo(i) {
+    i = i && typeof i === "object" ? i : {};
+    return { type: String(i.type || "Error").replace(/[^\w]/g, "").slice(0, 40) || "Error", msg: String(i.msg == null ? "" : i.msg).slice(0, 500), line: Number.isInteger(i.line) && i.line > 0 ? i.line : null };
+  }
 
   // Run all tests on the given HTML. Each test gets its own fresh page.
   // test: { before?: "js", check: "js expression" | "@console", expected: "text", stdin?, desc? }
@@ -110,10 +117,14 @@
       let pageError = null, done = false;
       const finish = r => { if (done) return; done = true; listeners.delete(token); clearTimeout(timer); fr.remove(); if (r.error && r.error.line) r.error.src = srcLine(src, r.error.line); resolve(r); };
       const timer = setTimeout(() => finish({ error: pageError || { type: "Timeout", msg: "The page did not answer in time." } }), 6000);
-      listeners.set(token, (m) => {
-        if (m.type === "error" && !pageError) pageError = m.info;
-        if (m.type === "loaded") setTimeout(() => fr.contentWindow && fr.contentWindow.postMessage({ token, type: "test", before: T(t.before || ""), check: T(t.check || "@console") }, "*"), 30);
-        if (m.type === "result") finish(m.error ? { error: m.error } : pageError ? { error: pageError, got: m.value } : { got: m.value });
+      let asked = false;
+      const ask = () => { if (asked) return; asked = true; setTimeout(() => fr.contentWindow && fr.contentWindow.postMessage({ token, type: "test", before: T(t.before || ""), check: T(t.check || "@console") }, "*"), 30); };
+      listeners.set(token, (m, ev) => {
+        if (ev.source !== fr.contentWindow) return;
+        if (m.type === "error" && !pageError) pageError = cleanInfo(m.info);
+        if (m.type === "loaded") ask();
+        if (m.type === "ready") setTimeout(ask, 1500);   // a slow picture must not block the test
+        if (m.type === "result") finish(m.error ? { error: cleanInfo(m.error) } : pageError ? { error: pageError, got: String(m.value) } : { got: String(m.value) });
       });
       fr.srcdoc = prep.html;
       document.body.appendChild(fr);
@@ -179,8 +190,8 @@
       if (prep.error) { prep.error.src = srcLine(src, prep.error.line); addCon("err", "SyntaxError: " + prep.error.msg); showError(prep.error); }
       listeners.set(token, (m, ev) => {
         if (ev.source !== frame.contentWindow) return;
-        if (m.type === "console") addCon(m.kind, m.text);
-        if (m.type === "error") { m.info.src = srcLine(src, m.info.line); addCon("err", m.info.type + ": " + m.info.msg); if (!fb.innerHTML) showError(m.info); }
+        if (m.type === "console") addCon(String(m.kind), String(m.text));
+        if (m.type === "error") { const info = cleanInfo(m.info); info.src = srcLine(src, info.line); addCon("err", info.type + ": " + info.msg); if (!fb.innerHTML) showError(info); }
       });
       frame.srcdoc = prep.html;
     }

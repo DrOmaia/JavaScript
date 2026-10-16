@@ -209,7 +209,7 @@
     });
     range.oninput = () => { i = +range.value; draw(); };
     el.tabIndex = 0;
-    el.addEventListener("keydown", e => { if (e.key === "ArrowRight") { i = Math.min(steps.length - 1, i + 1); draw(); } if (e.key === "ArrowLeft") { i = Math.max(0, i - 1); draw(); } });
+    el.addEventListener("keydown", e => { if (e.target === range) return; if (e.key === "ArrowRight") { i = Math.min(steps.length - 1, i + 1); draw(); } if (e.key === "ArrowLeft") { i = Math.max(0, i - 1); draw(); } });
     draw();
     return el;
   }

@@ -65,7 +65,7 @@ with sync_playwright() as p:
             if d in SHOTS:
                 pg.screenshot(path=os.path.join(OUT, f"day{d:02}_{w}.png"))
                 if n["web"]:
-                    pg.locator(".webbox").first.scroll_into_view_if_needed(); pg.wait_for_timeout(500)
+                    pg.locator(".webbox:visible").first.scroll_into_view_if_needed(); pg.wait_for_timeout(500)
                     pg.screenshot(path=os.path.join(OUT, f"day{d:02}_{w}_web.png"))
             pg.close()
         for page in ["index.html", "playground.html", "review.html", "glossary.html", "cheatsheet.html?week=1", "notes.html", "setup.html", "certificate.html"]:

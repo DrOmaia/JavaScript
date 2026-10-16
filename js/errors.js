@@ -122,7 +122,7 @@
 
   function explain(info) {
     const r = RULES.find(r => { try { return r.t(info); } catch (e) { return false; } });
-    const where = info.line ? `<div class="where">Line ${info.line}: ${esc((info.src || "").trim())}</div>` : "";
+    const where = info.line ? `<div class="where">Line ${esc(info.line)}: ${esc((info.src || "").trim())}</div>` : info.inTest ? `<div class="where">This happened inside the test, when it used your code. Check the names the exercise asks for.</div>` : "";
     const raw = ["NeedMoreInput", "TooMuchOutput", "InfiniteLoop", "Timeout", "TooManyTimers"].includes(info.type) ? "" : `<p class="muted" style="font-size:.85rem;margin:6px 0 0">JavaScript's message: <code>${esc(info.type)}: ${esc(info.msg)}</code></p>`;
     let ex = "";
     if (r.wrong) ex = `<div class="two-col" style="margin-top:8px"><div><span class="label-wrong">✗ Wrong</span><pre class="code-static">${esc(r.wrong)}</pre></div><div><span class="label-right">✓ Right</span><pre class="code-static">${esc(r.right)}</pre></div></div>`;

@@ -3,8 +3,24 @@
   const KEY = "js30.v1";
   const blank = () => ({ profile: null, days: {}, cards: {}, streak: { last: null, count: 0 }, theme: null, code: {}, notes: {}, cardXp: 0 });
 
+  const isObj = x => x && typeof x === "object" && !Array.isArray(x);
+  const cleanName = s => String(s || "").trim().replace(/["'`\\{}<>$&]/g, "").slice(0, 24);
+  // keep only the shapes the site expects, so a damaged or hand-edited backup cannot break the pages
+  function normalize(d) {
+    const st = blank();
+    if (!isObj(d)) return st;
+    ["days", "cards", "code", "notes"].forEach(k => { if (isObj(d[k])) st[k] = d[k]; });
+    Object.keys(st.days).forEach(k => { if (!isObj(st.days[k])) delete st.days[k]; });
+    Object.keys(st.cards).forEach(k => { const c = st.cards[k]; if (!isObj(c) || typeof c.due !== "string") delete st.cards[k]; });
+    if (isObj(d.streak)) st.streak = { last: typeof d.streak.last === "string" ? d.streak.last : null, count: +d.streak.count || 0, best: +d.streak.best || 0 };
+    if (isObj(d.profile) && cleanName(d.profile.name)) st.profile = { name: cleanName(d.profile.name), avatar: typeof d.profile.avatar === "string" ? d.profile.avatar.slice(0, 8) : "🦊", goal: String(d.profile.goal || "school"), started: typeof d.profile.started === "string" ? d.profile.started : null };
+    if (d.theme === "dark" || d.theme === "light") st.theme = d.theme;
+    st.cardXp = +d.cardXp || 0;
+    ["capstone", "completedOn"].forEach(k => { if (typeof d[k] === "string") st[k] = d[k]; });
+    return st;
+  }
   function load() {
-    try { return Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); }
+    try { return normalize(JSON.parse(localStorage.getItem(KEY) || "{}")); }
     catch (e) { return blank(); }
   }
   let state = load();
@@ -190,7 +206,7 @@
     const cancel = bg.querySelector("#wCancel"); if (cancel) cancel.onclick = () => bg.remove();
     bg.querySelector("#wName").focus();
     const go = () => {
-      const name = bg.querySelector("#wName").value.trim().replace(/["'`\\{}<>$]/g, "");
+      const name = cleanName(bg.querySelector("#wName").value);
       const err = bg.querySelector("#wErr");
       if (!name) { err.textContent = "Please write your name."; err.style.display = "block"; return; }
       state.profile = { name, avatar, goal: bg.querySelector("#wGoal").value, started: (state.profile && state.profile.started) || today() };
@@ -208,6 +224,6 @@
     REPO_URL, STAR_SVG, touchStreak, addCards, dueCards, gradeCard, toast, renderTopbar, renderFooter, welcome, requireProfile, toggleTheme,
     reset() { if (confirm("Delete all your progress, code and notes in this browser?")) { localStorage.removeItem(KEY); location.href = "index.html"; } },
     exportData() { return JSON.stringify(state, null, 2); },
-    importData(txt) { const d = JSON.parse(txt); if (!d || typeof d !== "object" || !("days" in d)) throw new Error("not a backup"); state = Object.assign(blank(), d); save(); },
+    importData(txt) { const d = JSON.parse(txt); if (!isObj(d) || !isObj(d.days)) throw new Error("not a backup"); state = normalize(d); save(); },
   };
 })();

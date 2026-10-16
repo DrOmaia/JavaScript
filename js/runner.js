@@ -15,6 +15,8 @@
       if (m.status) { p.onStatus && p.onStatus(m.status); if (m.status === "running") p.arm(); return; }
       pending.delete(m.id); clearTimeout(p.timer);
       if (state !== "ready") setState("ready");
+      // every run gets a clean worker, so one program can never change the next one
+      if (m.result !== "ready" && !pending.size) { worker.terminate(); worker = null; spawn(); }
       m.ok ? p.resolve(m.result) : p.reject(new Error(m.fatal || "The code runner stopped unexpectedly."));
     };
     worker.onerror = () => {

@@ -3,7 +3,7 @@
   const { h, md, CodeBox, Parsons, Predict, Quiz, Puzzle, TypeAnswer } = JSUI;
   const { WebBox } = JSWeb;
   const esc = JS30.esc, T = JS30.T;
-  const n = Math.max(1, Math.min(30, parseInt(new URLSearchParams(location.search).get("day") || "1", 10)));
+  const n = Math.max(1, Math.min(30, parseInt(new URLSearchParams(location.search).get("day") || "1", 10) || 1));
   const meta = CURRICULUM.days.find(x => x.d === n);
   const main = document.getElementById("main");
 

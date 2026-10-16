@@ -36,7 +36,8 @@
 <h2 style="margin-top:28px">5. After JS30</h2>
 <p>To write JavaScript on your own computer, install the free editor <b>VS Code</b>, create a file <code>index.html</code>, and open it in your browser. Press <b>F12</b> in Chrome or Edge to open the real console. Online playgrounds like RunJS work too.</p>
 </main>
-<script>JS30.renderTopbar("setup");
+<script>
 document.getElementById("exp").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JS30.exportData()], {type:"application/json"})); a.download = "js30-backup-" + JS30.today() + ".json"; document.body.appendChild(a); a.click(); a.remove(); };
 document.getElementById("imp").onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(t => { try { JS30.importData(t); JS30.toast("Progress restored"); setTimeout(()=>location.href="index.html", 800); } catch(err) { alert("This file is not a JS30 backup."); } }); };
+try { JS30.renderTopbar("setup"); } catch (e) {}
 JS30.renderFooter();</script></body></html>

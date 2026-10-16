@@ -335,6 +335,7 @@ code, pre, kbd, .CodeMirror, .code-static, .pline, .viz-code, .hero-line, .hero-
 
 
 /* JS30 additions */
+@media (max-width:480px){.lv-pill{display:none}}
 .lv-pill{font:700 .8rem var(--font-body);background:var(--tint);color:var(--acc-ink);border-radius:99px;padding:4px 10px;white-space:nowrap}
 .callout.turn{background:var(--surface);border-color:var(--acc-2)}
 .callout.turn.is-ok{border-color:var(--ok)}

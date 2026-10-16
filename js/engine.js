@@ -15,8 +15,7 @@
   "use strict";
 
   const MAX_OUT = 20000;        // characters of output
-  const MAX_LOOP = 5000000;     // loop iterations in one run
-  const MAX_LINES = 20000000;   // statements in one run
+  const MAX_MS = 3000;          // a run that keeps looping longer than this is stopped
   const MAX_STEPS = 800;        // recorded steps in trace mode
   const MAX_TIMERS = 2000;      // timer callbacks in one run
 
@@ -26,7 +25,12 @@
   // Self-contained (no outside names), so web.js can copy it into a web page preview with toString().
   function formatLib() {
     const IDENT = /^[A-Za-z_$][\w$]*$/;
-    function quote(s) { return "'" + String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\n/g, "\\n").replace(/\t/g, "\\t") + "'"; }
+    function quote(s) {
+      s = String(s).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\t/g, "\\t");
+      if (s.indexOf("'") < 0) return "'" + s + "'";
+      if (s.indexOf('"') < 0) return '"' + s + '"';
+      return "'" + s.replace(/'/g, "\\'") + "'";
+    }
     function format(v, top, depth, seen) {
       depth = depth || 0; seen = seen || [];
       const t = typeof v;
@@ -66,7 +70,10 @@
       if (depth > 2) return cname + "{…}";
       const keys = Object.keys(v);
       if (!keys.length) return cname + "{}";
-      const parts = keys.slice(0, 50).map(k => (IDENT.test(k) ? k : quote(k)) + ": " + format(v[k], false, depth + 1, next));
+      const parts = keys.slice(0, 50).map(k => {
+        const d = Object.getOwnPropertyDescriptor(v, k);
+        return (IDENT.test(k) ? k : quote(k)) + ": " + (d && d.get ? "(...)" : format(v[k], false, depth + 1, next));
+      });
       if (keys.length > 50) parts.push("…");
       return cname + "{" + parts.join(", ") + "}";
     }
@@ -146,7 +153,7 @@
       }
       return out;
     }
-    function inFunction() { for (let i = scopes.length - 1; i >= 0; i--) { if (scopes[i].fn) return true; if (scopes[i].program) return false; } return false; }
+    function inFunction() { for (let i = scopes.length - 1; i >= 0; i--) { if (scopes[i].fn) return !scopes[i].plain; if (scopes[i].program) return false; } return false; }
     function stepCall(line) {
       if (!trace) return `__L(${line + off});`;
       return `__s(${line + off},${getters(localNames())},${inFunction() ? 1 : 0});`;
@@ -185,19 +192,20 @@
       if (n.body.type === "BlockStatement") {
         const names = params.concat(hoistedVars(n.body, []), blockNames(n.body.body));
         if (n.type === "FunctionExpression" && n.id) names.push(n.id.name);
-        scopes.push({ fn: true, names, name });
         const plain = n.generator || n.async;
+        scopes.push({ fn: true, names, name, plain });
         if (trace && !plain) ins(n.body.start + 1, `__enter(${JSON.stringify(name)},${line});try{`);
         n.params.forEach(walk);
         list(n.body.body);
         if (trace && !plain) ins(n.body.end - 1, `}finally{__exit()}`);
         scopes.pop();
       } else {
-        scopes.push({ fn: true, names: params, name });
+        scopes.push({ fn: true, names: params, name, plain: n.async });
         n.params.forEach(walk);
         if (trace && !n.async) {
-          const arrow = code.lastIndexOf("=>", n.body.start);
-          const start = arrow + 2;
+          // the real "=>" token (a comment between the parameters and the body may contain "=>" too)
+          let start = code.lastIndexOf("=>", n.body.start) + 2;
+          try { for (const tok of acorn.tokenizer(code.slice(n.start, n.body.start), { ecmaVersion: "latest" })) if (tok.type.label === "=>") start = n.start + tok.end; } catch (e) {}
           ins(start, `{__enter(${JSON.stringify(name)},${line});try{${stepCall(n.body.loc.start.line)}return __r(`);
           walk(n.body);
           ins(n.end, `)}finally{__exit()}}`);
@@ -250,7 +258,7 @@
           else walk(n.argument, n);
           return;
         case "ClassBody":
-          n.body.forEach(m => { if (m.value) { if (isFn(m.value)) fn(m.value, m); } else if (m.type === "StaticBlock") { scopes.push({ fn: true, names: [], name: "static" }); list(m.body); scopes.pop(); } });
+          n.body.forEach(m => { if (m.computed) walk(m.key, m); if (m.value) { if (isFn(m.value)) fn(m.value, m); else walk(m.value, m); } else if (m.type === "StaticBlock") { scopes.push({ fn: true, names: [], name: "static" }); list(m.body); scopes.pop(); } });
           return;
       }
       for (const k in n) {
@@ -273,12 +281,30 @@
   }
 
   // ---------------------------------------------------------------- execution
+  // Line numbers from an error's stack. Instrumentation keeps the student's line numbers, so the line of the
+  // innermost frame inside the student's function is the line in their code (after a fixed header offset).
+  const FRAME = /(?:<anonymous>|> Function|anonymous):(\d+):\d+/;
+  let HEADER = null;
+  function stackLine(e) {
+    if (HEADER === null) {
+      HEADER = 0;
+      try { new Function('"use strict";{\nthrow new Error("x")\n}')(); } catch (x) { const m = FRAME.exec(String(x && x.stack || "")); if (m) HEADER = +m[1] - 2; }
+    }
+    const m = FRAME.exec(String(e && e.stack || ""));
+    return m ? +m[1] - HEADER : null;
+  }
+  // errors in async code (a rejected promise nobody handles) belong to the run that is going on
+  let currentRun = null;
+  if (typeof process !== "undefined" && process.on) process.on("unhandledRejection", r => { if (currentRun) currentRun(r); });
+  else if (typeof self !== "undefined" && self.addEventListener) self.addEventListener("unhandledrejection", ev => { if (currentRun) { ev.preventDefault(); currentRun(ev.reason); } });
+
   // opts: { stdin, mode: "run" | "trace", after, globals: {name: value}, realTimers }
   async function execute(code, opts) {
     opts = opts || {};
     const mode = opts.mode || "run";
     const segs = [];
-    let outLen = 0, line = 0, lines = 0, loops = 0, marked = -1;
+    let outLen = 0, line = 0, ticks = 0, marked = -1, stopped = null, busy = false;
+    const t0 = Date.now();
     const steps = [];
     let truncated = false;
     const input = String(opts.stdin || "").replace(/\r/g, "").split("\n");
@@ -295,6 +321,7 @@
     const outSoFar = () => segs.filter(s => s[0] === "out" || s[0] === "warn" || s[0] === "err" || s[0] === "alert").map(s => s[1]).join("");
     const join = args => Array.prototype.map.call(args, a => format(a, true)).join(" ");
     let indent = "";
+    const counts = {}, timesAt = {};
     const con = {
       log() { write("out", indent + join(arguments) + "\n"); },
       info() { write("out", indent + join(arguments) + "\n"); },
@@ -302,6 +329,11 @@
       warn() { write("warn", indent + join(arguments) + "\n"); },
       error() { write("err", indent + join(arguments) + "\n"); },
       table(x) { write("out", indent + format(x, true) + "\n"); },
+      assert(ok) { if (!ok) write("err", indent + "Assertion failed" + (arguments.length > 1 ? ": " + join(Array.prototype.slice.call(arguments, 1)) : "") + "\n"); },
+      count(label) { label = label === undefined ? "default" : String(label); counts[label] = (counts[label] || 0) + 1; write("out", indent + label + ": " + counts[label] + "\n"); },
+      countReset(label) { counts[label === undefined ? "default" : String(label)] = 0; },
+      time(label) { timesAt[label === undefined ? "default" : String(label)] = Date.now(); },
+      timeEnd(label) { label = label === undefined ? "default" : String(label); if (label in timesAt) { write("out", indent + label + ": " + (Date.now() - timesAt[label]) + " ms\n"); delete timesAt[label]; } },
       group() { if (arguments.length) write("out", indent + join(arguments) + "\n"); indent += "  "; },
       groupEnd() { indent = indent.slice(2); },
       clear() { segs.length = 0; outLen = 0; },
@@ -333,14 +365,17 @@
     const frames = []; // {name, line, vars}
     const snap = getters => {
       const vars = [];
+      busy = true;
       (getters || []).forEach(([k, g]) => {
         let v; try { v = g(); } catch (e) { return; }
         if (vars.some(x => x[0] === k)) return;
         vars.push([k, format(v, false), typeName(v)]);
       });
+      busy = false;
       return vars;
     };
     function record(event, extra, more) {
+      if (busy) return;
       const g = snap(more ? globalsGet.concat(more) : globalsGet);
       const stack = [{ name: "Global", vars: g }];
       frames.forEach(f => stack.push({ name: f.name + "()", vars: f.vars }));
@@ -349,19 +384,38 @@
       steps.push(st);
       if (steps.length >= MAX_STEPS) { truncated = true; throw new Stop("StepLimit", "steps"); }
     }
+    // stop a program that keeps running; once stopped, every later step stops again (even inside try/catch)
+    function guard() {
+      if (stopped) throw stopped;
+      if ((++ticks & 4095) === 0 && Date.now() - t0 > MAX_MS) { stopped = new Stop("InfiniteLoop", "Your program kept running for more than " + MAX_MS / 1000 + " seconds, so it was stopped. A loop probably never ends."); stopped.line = line; throw stopped; }
+    }
+    let markLine = 0;
+    // run the timers waiting now, in time order (used before test code, so its output comes after the student's)
+    function runTimers() {
+      let count = 0;
+      while (timers.length) {
+        timers.sort((a, b) => a.t - b.t || a.id - b.id);
+        const tm = timers.shift();
+        clock = tm.t;
+        if (tm.repeat) timers.push(Object.assign({}, tm, { t: tm.t + tm.repeat }));
+        if (++count > MAX_TIMERS) throw new Stop("TooManyTimers", "Your timers kept running for too long (setInterval with no clearInterval?).");
+        tm.fn.apply(null, tm.args);
+      }
+    }
     const rt = {
-      __L(l) { line = l; if (++lines > MAX_LINES) throw new Stop("InfiniteLoop", "Your program ran for too long (maybe an infinite loop)."); },
-      __g() { if (++loops > MAX_LOOP) throw new Stop("InfiniteLoop", "A loop ran more than " + MAX_LOOP.toLocaleString("en") + " times, so it was stopped. It probably never ends."); },
+      __L(l) { if (!busy) line = l; guard(); },
+      __g() { guard(); },
       __s(l, getters, inFn) {
-        line = l; lines++;
+        if (busy) return;
+        line = l; guard();
         if (inFn && frames.length) { frames[frames.length - 1].vars = snap(getters); record("line"); }
         else record("line", undefined, getters); // block variables at the top level (like the i of a for loop) show in Global
       },
       __G(getters) { globalsGet = getters; },
-      __enter(name, l) { frames.push({ name, line: l, vars: [] }); if (frames.length > 200) throw new RangeError("Maximum call stack size exceeded"); },
-      __exit() { frames.pop(); },
-      __r(v) { if (frames.length) record("return", format(v, false)); return v; },
-      __mark() { segs.push(["mark", ""]); marked = segs.length; outLen = 0; },
+      __enter(name, l) { if (busy) return; frames.push({ name, line: l, vars: [] }); if (frames.length > 200) throw new RangeError("Maximum call stack size exceeded"); },
+      __exit() { if (!busy) frames.pop(); },
+      __r(v) { if (frames.length && !busy) record("return", format(v, false)); return v; },
+      __mark() { runTimers(); segs.push(["mark", ""]); marked = segs.length; outLen = 0; markLine = line; },
     };
 
     let src = code, err = null;
@@ -382,19 +436,25 @@
     const extra = opts.globals || {};
     Object.keys(extra).forEach(k => { names.push(k); vals.push(extra[k]); });
 
+    const studentLines = code.split("\n").length;
     function info(e) {
-      if (e instanceof Stop) return { type: e.stopType, msg: e.message, line };
-      if (e && typeof e === "object" && "message" in e) return { type: e.name || "Error", msg: String(e.message), line: line || null };
-      return { type: "Uncaught", msg: format(e, false), line: line || null };
+      let r;
+      if (e instanceof Stop) r = { type: e.stopType, msg: e.message, line: e.line || line };
+      else if (e && typeof e === "object" && "message" in e) r = { type: e.name || "Error", msg: String(e.message), line: stackLine(e) || line || null };
+      else r = { type: "Uncaught", msg: format(e, true), line: line || null };
+      if (r.line && r.line > studentLines) { r.line = null; r.inTest = true; }   // the error happened in the test code
+      return r;
     }
     const realTick = () => new Promise(r => (typeof setImmediate === "function" ? setImmediate(r) : setTimeout(r, 0)));
+    let rejected = null;
+    currentRun = r => { if (!rejected) rejected = r; };
     try {
       const f = new Function(...names, '"use strict";{' + src + "\n}");
       const ret = f(...vals);
       // let promises settle, then run fake timers in order
       await realTick();
       let count = 0;
-      while (timers.length && !err) {
+      while (timers.length && !err && !rejected) {
         timers.sort((a, b) => a.t - b.t || a.id - b.id);
         const tm = timers.shift();
         clock = tm.t;
@@ -403,13 +463,19 @@
         tm.fn.apply(null, tm.args);
         await realTick();
       }
+      await realTick();
       void ret;
     } catch (e) {
       if (!(e instanceof Stop && e.stopType === "StepLimit")) err = info(e);
     }
+    currentRun = null;
+    if (!err && stopped) err = info(stopped);
+    if (!err && rejected) err = info(rejected);
     if (err && err.line) err.src = (code + after).split("\n")[err.line - 1];
     if (mode === "trace" && !truncated) {
-      steps.push({ line: null, event: "end", stack: [{ name: "Global", vars: snap(globalsGet) }], out: outSoFar() });
+      let vars = [];
+      try { vars = snap(globalsGet); } catch (e) { busy = false; }
+      steps.push({ line: null, event: "end", stack: [{ name: "Global", vars }], out: outSoFar() });
     }
     const res = { segs, error: err };
     if (mode === "trace") { res.steps = steps; res.truncated = truncated; }
