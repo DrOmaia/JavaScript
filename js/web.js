@@ -104,7 +104,7 @@
       const prep = prepare(src, "test", token, T(t.stdin || ""));
       if (prep.error) { prep.error.src = srcLine(src, prep.error.line); resolve({ error: prep.error }); return; }
       const fr = document.createElement("iframe");
-      fr.setAttribute("sandbox", "allow-scripts");
+      fr.setAttribute("sandbox", "allow-scripts allow-forms");
       fr.style.cssText = "position:absolute;left:-9999px;top:0;width:800px;height:600px;border:0";
       fr.setAttribute("aria-hidden", "true"); fr.tabIndex = -1;
       let pageError = null, done = false;
@@ -136,7 +136,7 @@
       </div>
       <div class="cb-editor"></div>
       <div class="web-out">
-        <div class="web-pane"><div class="web-label">Your page</div><iframe sandbox="allow-scripts allow-modals" title="Preview of your page" style="height:${opts.height || 220}px"></iframe></div>
+        <div class="web-pane"><div class="web-label">Your page</div><iframe sandbox="allow-scripts allow-modals allow-forms" title="Preview of your page" style="height:${opts.height || 220}px"></iframe></div>
         <div class="web-pane"><div class="web-label">Console</div><div class="cb-out web-console" aria-live="polite"></div></div>
       </div>
     </div>`);
