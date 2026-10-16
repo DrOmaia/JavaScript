@@ -28,6 +28,27 @@ DAYS[29] = {
       ["Functions", "`orderTotal(count, price)` returns the total; `showTotal()` writes it on the page"],
       ["Events", "`click` on the Order button"],
     ] },
+    { t: "web", title: "canteen.html", height: 200, code: c`<!-- what the user sees -->
+<input id="count" type="number" placeholder="How many sandwiches?">
+<button id="order">Order</button>
+<p id="total"></p>
+
+<script>
+  // data
+  const price = 7;
+
+  // functions
+  function orderTotal(count, price) {
+    return count * price;
+  }
+  function showTotal() {
+    const count = Number(document.querySelector("#count").value);
+    document.querySelector("#total").textContent = ¦Total: #{orderTotal(count, price)} riyals¦;
+  }
+
+  // events
+  document.querySelector("#order").addEventListener("click", showTotal);
+</script>`, before: "<p>Here is that plan turned into a page. Find each row of the table in the code — the comments show where.</p>", note: "<p>Type 3 and press Order. Now try an empty box: it says <code>Total: 0 riyals</code>. Not wrong, but not helpful either — tomorrow you will learn to polish cases like this.</p>" },
     { t: "check", q: "You are planning a to-do app. Where does `tasks = [{ text: \"Read\", done: false }]` belong?", o: ["What the user sees", "The data you keep", "The events"], a: 1, e: "The array of task objects is the app's **data**. The page only shows it; the functions change it; the events decide when.", hint: "Is it something on the screen, or something the program remembers?" },
     { t: "h", text: "Logic first, page second" },
     { t: "p", html: "<p>The smartest order is: write the <b>logic</b> (the functions that calculate or change data) as plain JavaScript first and test it in the console with <code>console.log</code>. A function is easy to test there: give it values, look at what comes back. Only when the logic is right do you connect it to buttons and inputs. Then, if the page misbehaves, you know the bug is in the connection, not in the maths.</p>" },
