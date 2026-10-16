@@ -29,7 +29,7 @@ console.log("My score is", score);`, before: "<p>Run it and look at the output. 
     { t: "check", q: "What does this program show?", code: c`let city = "Riyadh";
 console.log("city");`, o: ["`Riyadh`", "`city`", "`\"Riyadh\"`", "an error"], a: 1, e: "`\"city\"` is in quotes, so it is just the text *city*. To see the value inside the box, write `console.log(city);` without quotes.", hint: "Look closely: is `city` inside quotes in the second line?" },
     { t: "h", text: "Changing a value: = means \"put into\"" },
-    { t: "p", html: "<p>Values change all the time: your phone battery drops, your pocket money goes up and down, the time moves on. A variable made with <code>let</code> can receive a new value whenever you want. You write the name, <code>=</code>, and the new value — <b>without</b> <code>let</code> this time, because the box already exists.</p>" },
+    { t: "p", html: "<p>Values change all the time: your battery drops, your pocket money goes up and down. A variable made with <code>let</code> can receive a new value whenever you want. You write the name, <code>=</code>, and the new value — <b>without</b> <code>let</code> this time, because the box already exists.</p>" },
     { t: "code", code: c`let battery = 100;
 console.log("Battery:", battery);
 battery = 85;
@@ -61,7 +61,7 @@ console.log(daysInWeek);`, error: true, before: "<p>Now try to change a <code>co
     { t: "p", html: "<p>A simple rule many programmers follow: <b>start with <code>const</code></b>. Switch to <code>let</code> only when you know the value must change (a score, a balance, a counter).</p>" },
     { t: "check", q: "Which of these should be a `const`?", o: ["The number of seconds in a minute", "The player's score in a game", "The phone battery level", "The money left in your wallet"], a: 0, e: "There are always 60 seconds in a minute, so it never changes: `const`. The others change while the program runs, so they need `let`.", hint: "Ask: will this value ever change while the program runs?" },
     { t: "h", text: "var: the old style" },
-    { t: "p", html: "<p>In older code and old tutorials you will see <code>var</code>. It is how variables were made before 2015. It still works, but it has some strange behaviours that cause bugs, so modern JavaScript uses <code>let</code> and <code>const</code>. If you see <code>var</code>, read it as \"an old <code>let</code>\" — and do not write it yourself.</p>" },
+    { t: "p", html: "<p>In old code you will see <code>var</code>, the way variables were made before 2015. It still works but has strange behaviours that cause bugs. Read it as \"an old <code>let</code>\" — and do not write it yourself.</p>" },
     { t: "static", code: c`var oldStyle = "please do not use me";   // old style
 let newStyle = "use me instead";          // modern` },
     { t: "h", text: "Swapping two values" },
