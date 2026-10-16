@@ -86,10 +86,10 @@ DAYS[30] = {
     } else if (n < 1 || n > 10 || n !== Math.round(n)) {
       msg.textContent = "You can order 1 to 10 whole sandwiches.";
     } else {
-      msg.textContent = ¦Done! ${n} sandwiches = ${n * 7} riyals.¦;
+      msg.textContent = ¦Done! #{n} sandwiches = #{n * 7} riyals.¦;
     }
   });
-</script>`.replace(/\$\{/g, "${"), before: "<p>Try it with an empty box, with <code>abc</code>, with <code>-3</code>, with <code>2.5</code>, and with <code>3</code>. Every case gets a helpful sentence.</p>", note: "<p><code>Number.isNaN(n)</code> is <code>true</code> when the text was not a number (for example <code>Number(\"abc\")</code>). The checks go from \"not a number at all\" to \"a number, but not allowed\" to \"all good\".</p>" },
+</script>`, before: "<p>Try it with an empty box, with <code>abc</code>, with <code>-3</code>, with <code>2.5</code>, and with <code>3</code>. Every case gets a helpful sentence.</p>", note: "<p><code>Number.isNaN(n)</code> is <code>true</code> when the text was not a number (for example <code>Number(\"abc\")</code>). The checks go from \"not a number at all\" to \"a number, but not allowed\" to \"all good\".</p>" },
     { t: "turn", level: "Medium", q: "A user leaves the box empty. What does this line show? (This is why we test for empty text **before** converting.)", code: c`console.log(Number(""));`, answers: ["0"], run: true, e: "`Number(\"\")` is `0`, not an error and not `NaN`. Without an empty-box check, your app would quietly calculate with 0.", placeholder: "type the output" },
     { t: "h", text: "A nice layout with a little CSS" },
     { t: "p", html: "<p>A few lines of CSS in a <code>&lt;style&gt;</code> tag inside <code>&lt;head&gt;</code> make a big difference. You do not need much: a font, some space (<code>padding</code>, <code>margin</code>), rounded corners, soft colours, and bigger buttons that are easy to tap on a phone.</p>" },
@@ -110,7 +110,7 @@ DAYS[30] = {
     <button>+1 goal</button>
   </div>
 </body>
-</html>` , note: "<p>Each rule is <i>selector</i> <code>{ property: value; }</code>. <code>body</code> styles the whole page, <code>.card</code> every element with that class. Change a colour and press Run — that is the fastest way to learn CSS.</p>" },
+</html>`, note: "<p>Each rule is <i>selector</i> <code>{ property: value; }</code>. <code>body</code> styles the whole page, <code>.card</code> every element with that class. Change a colour and press Run — that is the fastest way to learn CSS.</p>" },
     { t: "check", q: "Where should the CSS of your one-page app go?", o: ["In a `<style>` tag inside `<head>`", "Inside `console.log`", "In the `<script>` tag"], a: 0, e: "CSS lives in `<style>` (usually in `<head>`), HTML in `<body>`, and JavaScript in `<script>` at the end of `<body>`." },
     { t: "h", text: "Test like a user, then show it to someone" },
     { t: "p", html: "<p>Before you call it finished, use your app like a stranger would. Here is a short test list:</p><ul><li>Do the normal thing — does it work?</li><li>Leave things empty, type nonsense, click twice, click in a strange order.</li><li>Try it at phone width (make the preview narrow).</li><li>Is it obvious what to do first? Is every message clear?</li></ul><p>Then show it to your family or a friend <b>without explaining anything</b>. Watch where they hesitate — that is your next improvement.</p>" },
