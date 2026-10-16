@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playground — JS30</title>
+<meta name="description" content="A free 30-day JavaScript course for beginners. Everything runs in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%23F2D21B%22/><text x=%2250%22 y=%2266%22 font-size=%2246%22 font-weight=%22700%22 text-anchor=%22middle%22 fill=%22%2324211A%22 font-family=%22monospace%22>JS</text></svg>">
+<link rel="stylesheet" href="assets/vendor/codemirror/codemirror.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="js/app.js"></script>
+</head>
+<body>
+<main class="wrap narrow" style="padding-top:26px">
+<h1>Playground</h1>
+<p>Try any idea here. Your code is saved automatically. Use the <b>Input</b> box for programs that call <code>prompt()</code>, and <b>Visualize</b> to watch your code run line by line.</p>
+<div class="seg" role="tablist" aria-label="Playground mode" style="max-width:420px;margin:14px 0">
+  <button type="button" data-m="js" class="on">JavaScript only</button><button type="button" data-m="web">Web page (HTML + JS)</button></div>
+<div id="pg"></div><div id="pgWeb" hidden></div>
+</main>
+<script>JS30.renderTopbar("playground"); JS30.requireProfile();</script>
+<script src="assets/vendor/codemirror/codemirror.js"></script>
+<script src="assets/vendor/codemirror/javascript.js"></script>
+<script src="assets/vendor/codemirror/xml.js"></script>
+<script src="assets/vendor/codemirror/css.js"></script>
+<script src="assets/vendor/codemirror/htmlmixed.js"></script>
+<script src="assets/vendor/codemirror/matchbrackets.js"></script>
+<script src="assets/vendor/codemirror/closebrackets.js"></script>
+<script src="assets/vendor/acorn/acorn.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/runner.js"></script>
+<script src="js/errors.js"></script>
+<script src="js/components.js"></script>
+<script src="js/web.js"></script>
+<script>
+document.getElementById("pg").appendChild(JSUI.CodeBox({ id: "playground", persist: true, showStdin: true, title: "playground.js",
+  code: '// Welcome to your playground, {{name}}!\nconst name = prompt("What is your name?");\nconsole.log(`Hello, ${name}! JavaScript is ready.`);\n\nfor (let i = 1; i <= 3; i++) {\n  console.log(i, "*".repeat(i));\n}\n', stdin: "{{name}}" }));
+let webMade = false;
+document.querySelector(".seg").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  document.querySelectorAll(".seg button").forEach(x => x.classList.toggle("on", x === b));
+  const web = b.dataset.m === "web";
+  document.getElementById("pg").hidden = web; document.getElementById("pgWeb").hidden = !web;
+  if (web && !webMade) { webMade = true; document.getElementById("pgWeb").appendChild(JSWeb.WebBox({ id: "playground-web", persist: true, height: 300,
+    code: '<!DOCTYPE html>\n<html>\n<head>\n  <title>My page</title>\n</head>\n<body>\n  <h1 id="title">Hello, {{name}}!</h1>\n  <button id="btn">Click me</button>\n\n  <script>\n    const btn = document.querySelector("#btn");\n    btn.addEventListener("click", () => {\n      document.querySelector("#title").textContent = "You clicked!";\n      console.log("clicked");\n    });\n  </scr' + 'ipt>\n</body>\n</html>\n' })); }
+};
+JSRunner.warmup().catch(()=>{});
+JS30.renderFooter();
+</script></body></html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificate — JS30</title>
+<meta name="description" content="A free 30-day JavaScript course for beginners. Everything runs in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%23F2D21B%22/><text x=%2250%22 y=%2266%22 font-size=%2246%22 font-weight=%22700%22 text-anchor=%22middle%22 fill=%22%2324211A%22 font-family=%22monospace%22>JS</text></svg>">
+<link rel="stylesheet" href="assets/vendor/codemirror/codemirror.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="js/app.js"></script>
+</head>
+<body>
+<style>
+.cert-wrap{padding:30px 0 50px}
+.cert{position:relative;max-width:980px;margin:0 auto;aspect-ratio:1.414/1;background:#fff;color:#24211A;border-radius:6px;padding:5.5% 7%;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;text-align:center}
+.cert::before{content:"";position:absolute;inset:18px;border:2px solid #C9A800;border-radius:4px;pointer-events:none}
+.cert::after{content:"";position:absolute;inset:26px;border:1px solid #EADB9A;border-radius:2px;pointer-events:none}
+.cert .band{position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:#FFF2BF}
+.cert .band2{position:absolute;left:-80px;bottom:-80px;width:260px;height:260px;border-radius:50%;background:#FFF8DC}
+.cert .band,.cert .band2{z-index:0}
+.cert::before,.cert::after{z-index:1}
+.cert > *:not(.band):not(.band2){position:relative;z-index:2}
+.cert .brand{display:flex;align-items:center;justify-content:center;gap:10px;font:800 1.2rem "Bricolage",sans-serif}
+.cert .brand .mark{display:grid;place-items:center;width:40px;height:40px;border-radius:11px;background:#F2D21B;color:#24211A;font:600 1rem "JBMono",monospace}
+.cert .kind{font:600 1rem "Figtree",sans-serif;color:#6A634F;margin-top:6px}
+.cert .name{font:800 clamp(2rem,6vw,4.2rem)/1.05 "Bricolage",sans-serif;color:#7A5D00;margin:.2em 0 .15em}
+.cert .line{font:500 clamp(.95rem,1.8vw,1.15rem)/1.6 "Figtree",sans-serif;max-width:640px;margin:0 auto}
+.cert .code{font:600 clamp(.9rem,1.8vw,1.1rem) "JBMono",monospace;background:#1F1D18;color:#F2EEDF;border-radius:10px;padding:8px 14px;display:inline-block;margin:8px auto 0}
+.cert .code .k{color:#9FD8FF}.cert .code .s{color:#FFD68A}
+.cert .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;font:600 .85rem "Figtree",sans-serif;color:#6A634F}
+.cert .meta b{display:block;font:800 1.25rem "Bricolage",sans-serif;color:#24211A}
+@media (max-width:640px){.cert{aspect-ratio:auto;gap:18px;padding:40px 30px}.cert .meta{grid-template-columns:1fr 1fr}}
+@media print{@page{size:A4 landscape;margin:0} body{background:#fff} .cert-wrap{padding:0} .cert{box-shadow:none;max-width:none;width:297mm;height:210mm;aspect-ratio:auto;border-radius:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+<main class="wrap cert-wrap" id="main"></main>
+<script src="js/curriculum.js"></script>
+<script>
+JS30.renderTopbar("cert"); JS30.requireProfile();
+(function(){
+  const st = JS30.state, p = st.profile || {name:"Student"}, esc = JS30.esc, T = JS30.T;
+  const doneDays = CURRICULUM.days.filter(d => st.days[d.d] && st.days[d.d].done).length;
+  const solved = Object.values(st.days).reduce((a, d) => a + Object.keys(d.ex || {}).length, 0);
+  const quizzes = Object.values(st.days).filter(d => d.quiz);
+  const quizAvg = quizzes.length ? Math.round(100 * quizzes.reduce((a, d) => a + d.quiz.score / d.quiz.total, 0) / quizzes.length) : null;
+  const projects = { calc: "Calculator web app", quiz: "Quiz game web app", todo: "To-do list web app" };
+  const capstone = projects[st.capstone] || "Capstone project";
+  const main = document.getElementById("main");
+  const unlocked = st.days[30] && st.days[30].done;
+  if (!unlocked) {
+    main.innerHTML = `<div class="narrow" style="margin:0 auto"><h1>Your certificate is waiting</h1>
+      <p>It unlocks when you mark <b>Day 30</b> as complete. So far you have completed <b>${doneDays}</b> of 30 days and solved <b>${solved}</b> problems.</p>
+      <p>${esc(T("Keep going, {{name}} — your certificate is waiting at the end of Day 30!"))}</p>
+      <a class="btn btn-primary" href="${doneDays >= 29 ? "lesson.html?day=30" : "index.html"}">${doneDays >= 29 ? "Go to Day 30" : "Back to my journey"}</a></div>`;
+    return;
+  }
+  if (!st.completedOn) { st.completedOn = JS30.today(); JS30.save(); }
+  const dateTxt = new Date(st.completedOn + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  let h = 0; for (const ch of p.name + st.completedOn + (p.started || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const certId = "JS30-" + h.toString(36).toUpperCase().padStart(7, "0").slice(0, 7);
+  main.innerHTML = `<div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <h1 style="margin:0 auto 0 0;font-size:1.8rem">${esc(T("Congratulations, {{name}}! 🎉"))}</h1>
+      <button class="btn btn-primary" onclick="print()" type="button">Print or save as PDF</button></div>
+    <article class="cert" aria-label="Certificate of completion">
+      <span class="band"></span><span class="band2"></span>
+      <div><div class="brand"><span class="mark">JS</span>JS30</div><div class="kind">Certificate of completion</div></div>
+      <div>
+        <div class="line">This certifies that</div>
+        <div class="name">${esc(p.name)}</div>
+        <div class="line">has completed <b>JavaScript in 30 Days</b> — from the first <code style="background:none;color:inherit;padding:0">console.log()</code> to functions, arrays, objects and interactive web pages — and built a capstone project: <b>${esc(capstone)}</b>.</div>
+        <div class="code"><span class="k">console.log</span>(<span class="s">"${esc(p.name)} can code!"</span>);</div>
+      </div>
+      <div class="line" style="font-weight:700">${esc(JS30.xp())} points · Level ${JS30.level().n}: ${esc(JS30.level().name)}</div>
+      <div class="meta">
+        <div><b>${doneDays}/30</b>days completed</div>
+        <div><b>${solved}</b>problems solved</div>
+        <div><b>${quizAvg === null ? "—" : quizAvg + "%"}</b>average quiz score</div>
+        <div><b>${esc(dateTxt)}</b>${esc(certId)}</div>
+      </div>
+    </article>
+    <p class="muted no-print" style="text-align:center;margin-top:14px;font-size:.9rem">Tip: in the print window choose <b>Landscape</b> and enable <b>Background graphics</b> for the colors.</p>
+    <p class="no-print" style="text-align:center;margin-top:6px"><a class="gh-star" href="${JS30.REPO_URL}" target="_blank" rel="noopener">${JS30.STAR_SVG}Enjoyed JS30? Star it on GitHub</a></p>`;
+})();
+JS30.renderFooter();
+</script>
+</body></html>

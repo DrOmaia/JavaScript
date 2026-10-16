@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JS30 — Learn JavaScript in 30 days</title>
+<meta name="description" content="A free 30-day JavaScript course for beginners. Everything runs in your browser.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2224%22 fill=%22%23F2D21B%22/><text x=%2250%22 y=%2266%22 font-size=%2246%22 font-weight=%22700%22 text-anchor=%22middle%22 fill=%22%2324211A%22 font-family=%22monospace%22>JS</text></svg>">
+<link rel="stylesheet" href="assets/vendor/codemirror/codemirror.css">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="js/app.js"></script>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero" id="hero"></section>
+  <section id="map"></section>
+  <section>
+    <h2>Your toolbox</h2>
+    <div class="tools">
+      <a class="tool" href="review.html"><b>Review deck</b><span>Flashcards that come back right before you forget them.</span></a>
+      <a class="tool" href="playground.html"><b>Playground</b><span>A free editor for JavaScript and web pages.</span></a>
+      <a class="tool" href="glossary.html"><b>Glossary</b><span>Every word of the course, explained simply.</span></a>
+      <a class="tool" href="cheatsheet.html?week=1"><b>Cheat sheets</b><span>One printable page per week.</span></a>
+      <a class="tool" href="notes.html"><b>My notes</b><span>Everything you wrote, day by day.</span></a>
+      <a class="tool" href="certificate.html"><b>Certificate</b><span>Your personal certificate, unlocked after Day 30.</span></a>
+      <a class="tool" href="setup.html"><b>Help and backup</b><span>How the site works. Save or restore your progress.</span></a>
+      <a class="tool tool-star" href="https://github.com/dromaia/JavaScript" target="_blank" rel="noopener"><b><svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/></svg> Star JS30 on GitHub</b><span>Found it useful? A star helps other students find the course.</span></a>
+    </div>
+  </section>
+</main>
+<script src="js/curriculum.js"></script>
+<script>
+JS30.renderTopbar("home"); JS30.requireProfile();
+(function(){
+  const st = JS30.state, p = st.profile || {name:"Student"}, esc = JS30.esc;
+  const C = CURRICULUM;
+  const doneDays = C.days.filter(d => st.days[d.d] && st.days[d.d].done).map(d => d.d);
+  const current = (C.days.find(d => !(st.days[d.d] && st.days[d.d].done)) || C.days[29]);
+  const finished = !!(st.days[30] && st.days[30].done);
+  const solved = Object.values(st.days).reduce((a, d) => a + Object.keys(d.ex || {}).length, 0);
+  const streak = st.streak && (st.streak.last === JS30.today() || st.streak.last === JS30.addDays(JS30.today(), -1)) ? st.streak.count : 0;
+  const xp = JS30.xp(), lv = JS30.level(xp);
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const msg = finished ? "I did it" : "Day " + current.d + ": let's go";
+  document.getElementById("hero").innerHTML = `
+    <h1>${greet}, ${esc(p.name)}.</h1>
+    <div class="hero-line" aria-label="JavaScript code greeting you"><span class="k">console</span><span class="p">.</span><span class="k">log</span><span class="p">(</span><span class="s">"${esc(msg)}, ${esc(p.name)}!"</span><span class="p">);</span><span class="caret" aria-hidden="true"></span></div>
+    <div class="hero-out">${esc(msg)}, ${esc(p.name)}!</div>
+    <div class="hero-grid">
+      <div class="panel">
+        <h3 style="margin-bottom:6px">${finished ? "You finished JS30! 🎓" : "Next up — Day " + current.d}</h3>
+        <p style="font-size:1.1rem;margin-bottom:12px">${finished ? "All 30 days done. Your certificate is ready." : esc(current.title)}</p>
+        ${finished ? `<a class="btn btn-primary" href="certificate.html">🎓 View my certificate</a> <a class="btn btn-soft" href="review.html">Keep reviewing</a>` : `<a class="btn btn-primary" href="lesson.html?day=${current.d}">${st.days[current.d] && st.days[current.d].visited ? "Continue" : "Start"} Day ${current.d}</a>`}
+        <p class="muted" style="margin:12px 0 0;font-size:.92rem">Your plan: about an hour a day. Five lesson days, one review-and-project day and one rest day each week.</p>
+      </div>
+      <div class="panel xp-card" aria-label="Your points">
+        <div class="xp-top"><span class="lv">Level ${lv.n}</span><span class="chip">${esc(lv.name)}</span><span class="muted" style="margin-left:auto">${xp} points</span></div>
+        <div class="xp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${lv.pct}" aria-label="Progress to the next level"><span style="width:${lv.pct}%"></span></div>
+        <div class="muted" style="font-size:.85rem">${lv.to - xp} points to level ${lv.n + 1} · ${doneDays.length}/30 days · ${solved} problems · ${streak}-day streak</div>
+        <div class="badges">${JS30.badges().map(b => `<span class="bdg ${b.got ? "got" : ""}" title="${esc(b.how)}"><span class="bi" aria-hidden="true">${b.icon}</span>${esc(b.name)}</span>`).join("")}</div>
+      </div>
+    </div>`;
+  const map = document.getElementById("map");
+  map.innerHTML = `<h2>Your 30-day journey</h2>` + C.weeks.map(w => {
+    const days = C.days.filter(d => d.w === w.n);
+    return `<div class="week"><div class="week-head"><h3>${esc(w.title)}</h3><span class="muted">${esc(w.sub)}</span>${w.n <= 4 ? `<a class="muted" href="cheatsheet.html?week=${w.n}" style="font-size:.88rem">Cheat sheet</a>` : ""}</div>
+      <div class="days">${days.map(d => {
+        const ds = st.days[d.d] || {};
+        const cls = ["day", d.type, ds.done ? "done" : "", d.d === current.d ? "current" : "", d.ready ? "" : "soon"].join(" ");
+        const status = ds.done ? "✓ Done" : !d.ready ? "Soon" : d.type === "rest" ? "Rest and review" : ds.visited ? "In progress" : "";
+        return `<a class="${cls}" href="lesson.html?day=${d.d}"><span class="dn">Day ${d.d}</span><span class="dt">${esc(d.title)}</span><span class="ds">${status}</span></a>`;
+      }).join("")}</div></div>`;
+  }).join("");
+})();
+JS30.renderFooter();
+</script>
+</body></html>
