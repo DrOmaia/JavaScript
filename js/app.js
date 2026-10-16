@@ -139,7 +139,7 @@
         <a href="playground.html" class="hide-sm ${active === "playground" ? "active" : ""}">Playground</a>
         <a href="glossary.html" class="hide-sm ${active === "glossary" ? "active" : ""}">Glossary</a>
         <span class="lv-pill" title="Your level and points">Lv ${lv.n}</span>
-        <button type="button" id="themeBtn" aria-label="Toggle dark mode" title="Dark / light">◐</button>
+        <button type="button" id="themeBtn" aria-label="Toggle dark mode" title="Dark / light"><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" style="vertical-align:-3px"><path fill="currentColor" d="M21 14.5A8.5 8.5 0 0 1 9.5 3a8.5 8.5 0 1 0 11.5 11.5Z"/></svg></button>
         <button type="button" class="avatar-btn" id="profileBtn" aria-label="Edit profile" title="Your profile">${esc(av)}</button>
       </nav></div>`;
     document.body.prepend(bar);
